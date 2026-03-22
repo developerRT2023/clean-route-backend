@@ -29,6 +29,14 @@ type formData struct {
 	RoutePreference string     `json:"route_preference,omitempty"`
 }
 
+// httpClient is a package-level HTTP client with a 30-second timeout applied
+// to all outbound requests. Using the default http.Get() (which has no timeout)
+// causes the /route handler to hang indefinitely when Mapbox or GraphHopper are
+// slow, ultimately resulting in a broken-pipe error on the client side.
+var httpClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
+
 func findMapboxRoute(source [2]float64, destination [2]float64, delayCode uint8) mapbox.RouteData {
 	baseUrl := "https://api.mapbox.com/directions/v5/mapbox/driving-traffic/" + fmt.Sprintf("%f,%f;%f,%f", source[0], source[1], destination[0], destination[1])
 
@@ -56,7 +64,7 @@ func findMapboxRoute(source [2]float64, destination [2]float64, delayCode uint8)
 
 	url := baseUrl + "?" + params.Encode()
 
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	checkErrNil(err)
 
 	if resp.StatusCode != http.StatusOK {
@@ -113,7 +121,7 @@ func findGraphhopperRoute(source [2]float64, destination [2]float64, mode string
 
 	url := baseUrl + params.Encode()
 
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	checkErrNil(err)
 	defer resp.Body.Close()
 

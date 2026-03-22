@@ -40,8 +40,7 @@ func GetPredictedPm25(df []models.FeatureVector) ([]float64, error) {
 	r.Header.Add("Content-Type", "application/json")
 
 	// fmt.Println("Just before making the request...")
-	client := &http.Client{}
-	resp, err := client.Do(r)
+	resp, err := httpClient.Do(r)
 	checkErrNil(err)
 
 	if resp.StatusCode != http.StatusOK {

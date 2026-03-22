@@ -9,10 +9,17 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	waqi "github.com/sadityakumar9211/clean-route-backend/models/waqi"
 	"github.com/spf13/viper"
 )
+
+// httpClient is shared across all api package functions and enforces a 30-second
+// timeout on every outbound HTTP request so slow external APIs fail fast.
+var httpClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
 
 func FetchAQIData(location []float64, delayCode uint8) (float64, error) {
 	baseUrl := "https://api.waqi.info/feed/geo:" + fmt.Sprintf("%f;%f/?", location[1], location[0])
@@ -33,7 +40,7 @@ func FetchAQIData(location []float64, delayCode uint8) (float64, error) {
 
 	waqiUrl := baseUrl + params.Encode()
 
-	resp, err := http.Get(waqiUrl)
+	resp, err := httpClient.Get(waqiUrl)
 	checkErrNil(err)
 	defer resp.Body.Close()
 

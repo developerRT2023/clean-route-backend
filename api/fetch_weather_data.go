@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"net/url"
 
 	"github.com/sadityakumar9211/clean-route-backend/models/openweather"
@@ -32,7 +31,7 @@ func FetchWeatherData(location []float64) openweather.WeatherData {
 
 	// fmt.Println("The Query url is: ", weatherUrl)
 
-	resp, err := http.Get(weatherUrl)
+	resp, err := httpClient.Get(weatherUrl)
 	checkErrNil(err)
 	defer resp.Body.Close()
 
