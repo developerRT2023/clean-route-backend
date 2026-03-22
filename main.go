@@ -556,26 +556,17 @@ func SetReferrerPolicy() gin.HandlerFunc {
 
 func main() {
 	gin.SetMode(gin.ReleaseMode)
-	// if os.Getenv("RAILWAY") != "true" {
-	viper.SetConfigType("env")
-	// viper.AddConfigPath(".")
-	// viper.SetConfigFile(".env")
-	// viper.ReadInConfig()
-
-	if os.Getenv("RAILWAY") == "true" {
-		viper.SetConfigFile("ENV")
-	} else {
-		viper.SetConfigFile(".env")
-	}
-	
-	viper.ReadInConfig()
 	viper.AutomaticEnv()
-	// viper.SetConfigFile(".env")
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatalf("Error while reading config file %s", err)
+
+	if os.Getenv("RAILWAY") != "true" {
+		viper.SetConfigType("env")
+		viper.SetConfigFile(".env")
+		if err := viper.ReadInConfig(); err != nil {
+			if !os.IsNotExist(err) {
+				log.Fatalf("Error while reading config file %s", err)
+			}
+		}
 	}
-	// }
 
 	router := gin.Default()
 
