@@ -237,6 +237,10 @@ func findRoute(c *gin.Context) {
 		}
 
 		// Perform calculation and return the best path
+		if len(routes.Paths) == 0 {
+			c.IndentedJSON(http.StatusBadRequest, "Error: No routes returned by routing service.")
+			return
+		}
 		if routePref == "shortest" {
 			// sort the routes with distance and return the shortest path.
 			sort.SliceStable(routes.Paths, func(i, j int) bool {
@@ -293,20 +297,29 @@ func findRoute(c *gin.Context) {
 
 				return
 			} else {
+				// Cap slice bounds to the actual number of available paths
+				topN := len(routes.Paths)
+				if topN > 3 {
+					topN = 3
+				}
 
 				// sorting the top three routes based on exposure
 				sort.Slice(routes.Paths, func(i, j int) bool {
-					return routes.Paths[i].TotalExposure < routes.Paths[i].TotalExposure
+					return routes.Paths[i].TotalExposure < routes.Paths[j].TotalExposure
 				})
 
-				// sorting all the routes based on time
-				sort.SliceStable(routes.Paths[:3], func(i, j int) bool {
+				// sorting top routes (up to 3) based on time
+				sort.SliceStable(routes.Paths[:topN], func(i, j int) bool {
 					return routes.Paths[i].Time < routes.Paths[j].Time
 				})
 
 				// sorting the top two balanced(time, exposure) routes with energy
-				sort.Slice(routes.Paths[:2], func(i, j int) bool {
-					return routes.Paths[i].TotalEnergy < routes.Paths[i].TotalEnergy
+				topTwo := topN
+				if topTwo > 2 {
+					topTwo = 2
+				}
+				sort.Slice(routes.Paths[:topTwo], func(i, j int) bool {
+					return routes.Paths[i].TotalEnergy < routes.Paths[j].TotalEnergy
 				})
 			}
 
@@ -425,20 +438,29 @@ func findAllRoutes(c *gin.Context) {
 				}
 			}
 		} else {
+			// Cap slice bounds to the actual number of available paths
+			topN := len(routes.Paths)
+			if topN > 3 {
+				topN = 3
+			}
 
 			// sorting all the routes based on exposure
 			sort.Slice(routes.Paths, func(i, j int) bool {
-				return routes.Paths[i].TotalExposure < routes.Paths[i].TotalExposure
+				return routes.Paths[i].TotalExposure < routes.Paths[j].TotalExposure
 			})
 
-			// sorting top 3 routes based on time
-			sort.SliceStable(routes.Paths[:3], func(i, j int) bool {
+			// sorting top routes (up to 3) based on time
+			sort.SliceStable(routes.Paths[:topN], func(i, j int) bool {
 				return routes.Paths[i].Time < routes.Paths[j].Time
 			})
 
 			// sorting the top two balanced(time, exposure) routes with energy
-			sort.Slice(routes.Paths[:2], func(i, j int) bool {
-				return routes.Paths[i].TotalEnergy < routes.Paths[i].TotalEnergy
+			topTwo := topN
+			if topTwo > 2 {
+				topTwo = 2
+			}
+			sort.Slice(routes.Paths[:topTwo], func(i, j int) bool {
+				return routes.Paths[i].TotalEnergy < routes.Paths[j].TotalEnergy
 			})
 
 			routeList.Balanced = routes.Paths[0]
